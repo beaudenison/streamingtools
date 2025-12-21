@@ -5,8 +5,12 @@ An open-source toolkit of browser-based utilities for streamers and content crea
 ## 🚀 Use the Service
 
 <div align="center">
-  
-[![Access Streaming Tools](https://img.shields.io/badge/Access_Streaming_Tools-5865f2?style=for-the-badge&logo=github&logoColor=white)](https://beaudenison.github.io/streamingtools)
+
+### 👉 [**🎥 ACCESS STREAMING TOOLS →**](https://beaudenison.github.io/streamingtools) 👈
+
+[![Live Site](https://img.shields.io/badge/🌐_Live_Site-Click_Here-5865f2?style=for-the-badge&labelColor=2b2d31)](https://beaudenison.github.io/streamingtools)
+[![Status](https://img.shields.io/badge/Status-Online-00d9a3?style=for-the-badge&labelColor=2b2d31)](https://beaudenison.github.io/streamingtools)
+[![Free](https://img.shields.io/badge/💯_Free-No_Signup-00d9a3?style=for-the-badge&labelColor=2b2d31)](https://beaudenison.github.io/streamingtools)
 
 </div>
 
