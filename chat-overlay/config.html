@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Overlay Configuration - Streaming Tools</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="chat-overlay.css">
+</head>
+<body>
+    <main class="container">
+        <div class="config-header">
+            <h1>💬 Multi-Platform Chat Overlay</h1>
+            <p>Configure your chat overlay for OBS</p>
+            <a href="../index.html" class="back-link">Back to Home</a>
+        </div>
+
+        <div class="config-layout">
+            <!-- Left Column: Configuration -->
+            <div class="config-column">
+                <section class="config-section">
+                    <h2>Platform Selection</h2>
+                    <p class="section-description">Choose which platforms to display chat from</p>
+                    
+                    <div class="platform-list">
+                        <div class="platform-item">
+                            <div class="platform-header">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="platform-twitch" class="platform-checkbox">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <div class="platform-info">
+                                    <div class="platform-icon-small" style="background: #9147ff;">
+                                        <svg viewBox="0 0 24 24" fill="white">
+                                            <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
+                                        </svg>
+                                    </div>
+                                    <span class="platform-name">Twitch</span>
+                                </div>
+                            </div>
+                            <div class="platform-input-container" id="twitch-input-container" style="display: none;">
+                                <input type="text" id="twitch-username" placeholder="Enter Twitch username">
+                            </div>
+                        </div>
+
+                        <div class="platform-item">
+                            <div class="platform-header">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="platform-kick" class="platform-checkbox">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <div class="platform-info">
+                                    <div class="platform-icon-small" style="background: #53fc18;">
+                                        <svg viewBox="0 0 512 512" fill="black">
+                                            <path d="M231.458 74.208h49.084v166.667h-49.084zM85.333 74.208h49.083v166.667H85.333zm243.084 0v166.667l140.416-140.417H402.5l-74.083 74.084v-100.334z"/>
+                                            <path d="M0 0v512h109.25V403.125h62.417l109.25 108.875h231.416V345.542L402.5 455.375h-62.416l-109.25-109.25h49.083l109.25 109.25h62.416l109.833-109.833V74.208h-49.083V271.5l-60.75 60.75-109.25-109.25V74.208h-49.084v166.667l-62.416-62.417V74.208H85.333v297.917H0z"/>
+                                        </svg>
+                                    </div>
+                                    <span class="platform-name">Kick</span>
+                                </div>
+                            </div>
+                            <div class="platform-input-container" id="kick-input-container" style="display: none;">
+                                <input type="text" id="kick-username" placeholder="Enter Kick username">
+                            </div>
+                        </div>
+
+                        <div class="platform-item disabled">
+                            <div class="platform-header">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="platform-youtube" class="platform-checkbox" disabled>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <div class="platform-info">
+                                    <div class="platform-icon-small" style="background: #ff0000;">
+                                        <svg viewBox="0 0 24 24" fill="white">
+                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                        </svg>
+                                    </div>
+                                    <span class="platform-name">YouTube</span>
+                                </div>
+                                <span class="coming-soon-badge">Coming Soon</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="config-section">
+                    <h2>📡 API Status</h2>
+                    <div class="api-status-list">
+                        <div class="api-status-item">
+                            <div class="status-indicator status-success" id="twitch-status"></div>
+                            <span class="status-platform">Twitch:</span>
+                            <span class="status-text" id="twitch-status-text">Live IRC connection</span>
+                        </div>
+                        <div class="api-status-item">
+                            <div class="status-indicator status-success" id="kick-status"></div>
+                            <span class="status-platform">Kick:</span>
+                            <span class="status-text" id="kick-status-text">Live WebSocket connection</span>
+                        </div>
+                        <div class="api-status-item">
+                            <div class="status-indicator status-disabled" id="youtube-status"></div>
+                            <span class="status-platform">YouTube:</span>
+                            <span class="status-text" id="youtube-status-text">Coming Soon</span>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="url-display-section">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Browser Source URL (select and copy)</label>
+                    <textarea id="browser-source-url-display" readonly style="width: 100%; height: 80px; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: white; color: #000; font-family: monospace; font-size: 12px; resize: vertical; cursor: text;"></textarea>
+                </div>
+            </div>
+
+            <!-- Right Column: Live Preview -->
+            <div class="preview-column">
+                <section class="preview-section">
+                    <h2>Live Preview</h2>
+                    <p class="section-description">Real-time chat from your channels</p>
+                    <div class="preview-box" id="preview-box">
+                        <iframe id="preview-frame" style="width: 100%; height: 100%; border: none; background: transparent;"></iframe>
+                        <div class="preview-placeholder" id="preview-placeholder">
+                            Select platforms and enter usernames to see live chat preview
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <a href="https://x.com/beaudenison" target="_blank" rel="noopener noreferrer" class="social-link">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+            </a>
+        </div>
+    </footer>
+
+    <script src="config.js"></script>
+</body>
+</html>

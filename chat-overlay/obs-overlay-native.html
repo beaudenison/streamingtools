@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch Chat Overlay - OBS Ready</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 100vh;
+            overflow: hidden;
+        }
+
+        .chat-message {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.75);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .platform-badge {
+            min-width: 24px;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #9147ff;
+        }
+
+        .platform-badge svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .message-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .username {
+            font-weight: bold;
+            margin-right: 8px;
+            color: #9147ff;
+        }
+
+        .message-text {
+            color: #ffffff;
+            word-wrap: break-word;
+        }
+
+        .timestamp {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85em;
+            margin-right: 8px;
+        }
+
+        .system-message {
+            padding: 8px 14px;
+            background: rgba(145, 71, 255, 0.3);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9em;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-out {
+            animation: fadeOut 0.3s ease forwards;
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container"></div>
+
+    <script>
+        // ============================================
+        // Configuration - Set via URL parameters
+        // ============================================
+        const urlParams = new URLSearchParams(window.location.search);
+        const CONFIG = {
+            channel: urlParams.get('channel') || 'xqc',
+            showTimestamp: urlParams.get('showTimestamp') !== '0',
+            showBadge: urlParams.get('showBadge') !== '0',
+            maxMessages: parseInt(urlParams.get('maxMessages')) || 50,
+            fontSize: parseInt(urlParams.get('fontSize')) || 16
+        };
+
+        // Apply font size
+        document.documentElement.style.fontSize = CONFIG.fontSize + 'px';
+
+        const chatContainer = document.getElementById('chat-container');
+        let messageCount = 0;
+
+        // ============================================
+        // Native WebSocket Twitch Chat Client
+        // ============================================
+        class TwitchChat {
+            constructor(channel) {
+                this.channel = channel.toLowerCase();
+                this.ws = null;
+                this.connected = false;
+            }
+            
+            connect() {
+                console.log(`Connecting to Twitch chat: #${this.channel}`);
+                this.ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+                
+                this.ws.onopen = () => {
+                    // Request capabilities
+                    this.ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+                    // Anonymous login
+                    this.ws.send('PASS SCHMOOPIIE');
+                    this.ws.send('NICK justinfan' + Math.floor(Math.random() * 100000));
+                    // Join channel
+                    this.ws.send(`JOIN #${this.channel}`);
+                };
+                
+                this.ws.onmessage = (event) => {
+                    event.data.split('\r\n').forEach(msg => {
+                        if (!msg) return;
+                        
+                        // Handle PING
+                        if (msg.startsWith('PING')) {
+                            this.ws.send('PONG :tmi.twitch.tv');
+                            return;
+                        }
+                        
+                        // Handle chat messages
+                        if (msg.includes('PRIVMSG')) {
+                            const parsed = this.parseMessage(msg);
+                            if (parsed && window.onChatMessage) {
+                                window.onChatMessage(parsed);
+                            }
+                        }
+                        
+                        // Handle successful connection
+                        if (msg.includes('376') || msg.includes('End of /NAMES list')) {
+                            this.connected = true;
+                            console.log(`Connected to #${this.channel}`);
+                            if (window.onChatConnected) {
+                                window.onChatConnected();
+                            }
+                        }
+                    });
+                };
+                
+                this.ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                };
+                
+                this.ws.onclose = () => {
+                    console.log('Disconnected from Twitch. Reconnecting...');
+                    this.connected = false;
+                    setTimeout(() => this.connect(), 3000);
+                };
+            }
+            
+            parseMessage(raw) {
+                try {
+                    let tags = {}, msg = raw;
+                    
+                    // Extract IRC tags
+                    if (msg.startsWith('@')) {
+                        const end = msg.indexOf(' ');
+                        msg.substring(1, end).split(';').forEach(tag => {
+                            const [k, v] = tag.split('=');
+                            tags[k] = v || '';
+                        });
+                        msg = msg.substring(end + 1);
+                    }
+                    
+                    // Extract username and message
+                    const match = msg.match(/:(.+?)!.+?@.+? PRIVMSG #.+ :(.+)/);
+                    if (!match) return null;
+                    
+                    const username = match[1];
+                    const text = match[2];
+                    
+                    // Generate color if not provided
+                    let color = tags['color'];
+                    if (!color || color === '') {
+                        color = this.generateColor(username);
+                    }
+                    
+                    return {
+                        username: tags['display-name'] || username,
+                        message: text,
+                        color: color,
+                        timestamp: new Date()
+                    };
+                } catch (error) {
+                    console.error('Parse error:', error);
+                    return null;
+                }
+            }
+            
+            generateColor(username) {
+                const colors = [
+                    '#FF0000', '#0000FF', '#008000', '#B22222', '#FF7F50',
+                    '#9ACD32', '#FF4500', '#2E8B57', '#DAA520', '#D2691E',
+                    '#5F9EA0', '#1E90FF', '#FF69B4', '#8A2BE2', '#00FF7F'
+                ];
+                let hash = 0;
+                for (let i = 0; i < username.length; i++) {
+                    hash = username.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                return colors[Math.abs(hash) % colors.length];
+            }
+            
+            disconnect() {
+                if (this.ws) {
+                    this.ws.close();
+                    this.ws = null;
+                }
+            }
+        }
+
+        // ============================================
+        // Display Functions
+        // ============================================
+        function addChatMessage(data) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message';
+            
+            let html = '';
+            
+            // Platform badge
+            if (CONFIG.showBadge) {
+                html += `
+                    <div class="platform-badge">
+                        <svg viewBox="0 0 24 24" fill="white">
+                            <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
+                        </svg>
+                    </div>
+                `;
+            }
+            
+            html += '<div class="message-content">';
+            
+            // Timestamp
+            if (CONFIG.showTimestamp) {
+                const time = data.timestamp.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                html += `<span class="timestamp">[${time}]</span>`;
+            }
+            
+            // Username and message
+            html += `
+                <span class="username" style="color: ${data.color};">${escapeHtml(data.username)}:</span>
+                <span class="message-text">${escapeHtml(data.message)}</span>
+            `;
+            
+            html += '</div>';
+            messageDiv.innerHTML = html;
+            
+            chatContainer.appendChild(messageDiv);
+            messageCount++;
+            
+            // Remove old messages
+            while (chatContainer.children.length > CONFIG.maxMessages) {
+                const oldMsg = chatContainer.firstChild;
+                if (oldMsg && !oldMsg.classList.contains('system-message')) {
+                    oldMsg.classList.add('fade-out');
+                    setTimeout(() => oldMsg.remove(), 300);
+                    messageCount--;
+                }
+            }
+        }
+
+        function addSystemMessage(text, duration = 5000) {
+            const div = document.createElement('div');
+            div.className = 'system-message';
+            div.textContent = text;
+            chatContainer.appendChild(div);
+            
+            if (duration > 0) {
+                setTimeout(() => {
+                    div.classList.add('fade-out');
+                    setTimeout(() => div.remove(), 300);
+                }, duration);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============================================
+        // Initialize Chat
+        // ============================================
+        const chat = new TwitchChat(CONFIG.channel);
+
+        window.onChatConnected = () => {
+            addSystemMessage(`✓ Connected to #${CONFIG.channel}`);
+        };
+
+        window.onChatMessage = (data) => {
+            addChatMessage(data);
+        };
+
+        // Start connection
+        chat.connect();
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            chat.disconnect();
+        });
+
+        console.log('Twitch Chat Overlay initialized');
+        console.log('Channel:', CONFIG.channel);
+        console.log('Configuration:', CONFIG);
+    </script>
+</body>
+</html>
