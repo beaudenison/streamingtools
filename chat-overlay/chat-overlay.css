@@ -1,32 +1,40 @@
 .config-header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 2.5rem;
+    padding: 1.5rem 0;
 }
 
 .config-header h1 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    font-weight: 700;
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    margin: 1rem 0 0.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--accent-color) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .config-header p {
     color: var(--text-muted);
-    margin-bottom: 0.75rem;
+    margin-bottom: 0;
+    font-size: clamp(0.875rem, 2vw, 1rem);
 }
 
 .back-link {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    color: var(--text-color);
+    color: var(--text-muted);
     text-decoration: none;
-    font-size: 0.9rem;
-    padding: 0.6rem 1.2rem;
+    font-size: 0.9375rem;
+    padding: 0.625rem 1.25rem;
     background: var(--card-bg);
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
     transition: all 0.2s ease;
     font-weight: 500;
+    margin-bottom: 1rem;
 }
 
 .back-link:hover {
@@ -36,30 +44,34 @@
     transform: translateX(-4px);
 }
 
-.back-link::before {
-    content: '←';
-    font-size: 1.2rem;
-    transition: transform 0.2s ease;
-}
-
-.back-link:hover::before {
-    transform: translateX(-2px);
+@media (max-width: 640px) {
+    .back-link {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 .config-layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2rem;
+    gap: 1.5rem;
     align-items: start;
 }
 
 @media (max-width: 1024px) {
     .config-layout {
         grid-template-columns: 1fr;
+        gap: 2rem;
     }
     
     .preview-column {
         order: -1;
+    }
+}
+
+@media (max-width: 640px) {
+    .config-layout {
+        gap: 1.5rem;
     }
 }
 
@@ -81,11 +93,12 @@
 
 .config-section {
     background: var(--card-bg);
+    backdrop-filter: blur(10px);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 2rem;
-    margin-bottom: 1.5rem;
-    transition: border-color 0.2s ease;
+    border-radius: 20px;
+    padding: 1.75rem;
+    margin-bottom: 0;
+    transition: all 0.2s ease;
 }
 
 .config-section:hover {
@@ -94,12 +107,19 @@
 
 .config-section h2 {
     color: var(--text-color);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.625rem;
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 1.125rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    letter-spacing: -0.01em;
+}
+
+@media (max-width: 640px) {
+    .config-section {
+        padding: 1.25rem;
+    }
 }
 
 .section-description {
@@ -115,15 +135,16 @@
 }
 
 .platform-item {
-    background: var(--secondary-color);
-    border: 2px solid var(--border-color);
-    border-radius: 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
     overflow: hidden;
     transition: all 0.2s ease;
 }
 
 .platform-item:hover:not(.disabled) {
     border-color: var(--primary-color);
+    transform: translateY(-2px);
 }
 
 .platform-item.disabled {
@@ -136,6 +157,12 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem 1.25rem;
+}
+
+@media (max-width: 640px) {
+    .platform-header {
+        padding: 0.875rem 1rem;
+    }
 }
 
 .platform-info {
@@ -353,28 +380,40 @@ input:disabled + .toggle-slider {
 /* Preview Section */
 .preview-section {
     background: var(--card-bg);
+    backdrop-filter: blur(10px);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 2rem;
+    border-radius: 20px;
+    padding: 1.75rem;
 }
 
 .preview-section h2 {
     color: var(--text-color);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.625rem;
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 1.125rem;
+    letter-spacing: -0.01em;
 }
 
 .preview-box {
     background: var(--bg-color);
-    border: 2px solid var(--border-color);
-    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
     padding: 0;
     height: 500px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     position: relative;
+}
+
+@media (max-width: 640px) {
+    .preview-section {
+        padding: 1.25rem;
+    }
+    
+    .preview-box {
+        height: 400px;
+    }
 }
 
 #preview-frame {
@@ -646,11 +685,52 @@ input:disabled + .toggle-slider {
     white-space: nowrap;
 }
 
-.instructions {
-    background: var(--secondary-color);
+.url-display-section {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 1.75rem;
+}
+
+.url-display-section label {
+    display: block;
+    margin-bottom: 0.625rem;
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 0.9375rem;
+}
+
+.url-display-section textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 0.875rem;
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 1.5rem;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Courier New', monospace;
+    font-size: 0.8125rem;
+    resize: vertical;
+    cursor: text;
+    transition: all 0.2s ease;
+}
+
+.url-display-section textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+@media (max-width: 640px) {
+    .url-display-section {
+        padding: 1.25rem;
+    }
+    
+    .url-display-section textarea {
+        font-size: 0.75rem;
+    }
+}
 }
 
 .instructions h3 {
@@ -676,4 +756,39 @@ input[type="checkbox"] {
     margin-right: 0.5rem;
     cursor: pointer;
     accent-color: var(--primary-color);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+    .config-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .platform-icon-small {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .platform-icon-small svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .platform-name {
+        font-size: 0.9375rem;
+    }
+    
+    .toggle-switch {
+        width: 40px;
+        height: 22px;
+    }
+    
+    .toggle-slider:before {
+        height: 16px;
+        width: 16px;
+    }
+    
+    input:checked + .toggle-slider:before {
+        transform: translateX(18px);
+    }
 }
