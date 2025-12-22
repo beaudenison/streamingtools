@@ -10,7 +10,7 @@ An open-source toolkit of browser-based utilities for streamers and content crea
 
 </div>
 
-All tools are free to use, work directly in your browser, and require no installation.
+A collection of free streaming tools to enhance your content creation workflow.
 
 ## 🛠️ Build Your Own
 
