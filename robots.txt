@@ -1,0 +1,25 @@
+# Allow all crawlers and AI bots
+User-agent: *
+Allow: /
+
+# Explicitly allow AI crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+# Sitemap location
+Sitemap: https://beaudenison.github.io/streamingtools/sitemap.xml
