@@ -78,7 +78,7 @@ function addChatMessage(platform, username, message, timestamp = new Date(), emo
             hour: '2-digit', 
             minute: '2-digit' 
         });
-        html += `<span class="timestamp" style="color: ${config.appearance.textColor};">[${time}]</span>`;
+        html += `<span class="timestamp" style="color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">[${time}]</span>`;
     }
     
     // Process message with emotes
