@@ -13,10 +13,14 @@ const config = {
         fontSize: parseInt(urlParams.get('fontSize')) || 18,
         showLogo: urlParams.get('showLogo') === '1',
         showTimestamp: urlParams.get('showTimestamp') === '1',
-        showBackground: urlParams.get('showBackground') === null || urlParams.get('showBackground') === '1',  // Default to true
+        showBackground: urlParams.get('showBackground') !== '0',  // true unless explicitly set to '0'
         messageTimeout: parseInt(urlParams.get('messageTimeout')) || 0
     }
 };
+
+console.log('Overlay config loaded:', config);
+console.log('showBackground param:', urlParams.get('showBackground'));
+console.log('messageTimeout param:', urlParams.get('messageTimeout'));
 
 const chatContainer = document.getElementById('chat-container');
 const MAX_MESSAGES = 50; // Maximum messages to display
@@ -74,7 +78,7 @@ function addChatMessage(platform, username, message, timestamp = new Date(), emo
             hour: '2-digit', 
             minute: '2-digit' 
         });
-        html += `<span class="timestamp">[${time}]</span>`;
+        html += `<span class="timestamp" style="color: ${config.appearance.textColor};">[${time}]</span>`;
     }
     
     // Process message with emotes
@@ -94,8 +98,10 @@ function addChatMessage(platform, username, message, timestamp = new Date(), emo
     
     // Auto-remove message after timeout if configured
     if (config.appearance.messageTimeout > 0) {
+        console.log(`Message will be removed in ${config.appearance.messageTimeout} seconds`);
         setTimeout(() => {
             if (messageDiv.parentNode) {
+                console.log('Removing message after timeout');
                 messageDiv.classList.add('removing');
                 setTimeout(() => {
                     if (messageDiv.parentNode) {
