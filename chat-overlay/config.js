@@ -59,32 +59,27 @@ document.addEventListener('DOMContentLoaded', function() {
     textColorInput.addEventListener('input', (e) => {
         config.appearance.textColor = e.target.value;
         textColorHex.value = e.target.value;
-        updatePreview();
         updateBrowserSourceURL();
     });
 
     fontSizeInput.addEventListener('input', (e) => {
         config.appearance.fontSize = parseInt(e.target.value);
         fontSizeValue.textContent = `${e.target.value}px`;
-        updatePreview();
         updateBrowserSourceURL();
     });
 
     showLogoCheckbox.addEventListener('change', (e) => {
         config.appearance.showLogo = e.target.checked;
-        updatePreview();
         updateBrowserSourceURL();
     });
 
     showTimestampCheckbox.addEventListener('change', (e) => {
         config.appearance.showTimestamp = e.target.checked;
-        updatePreview();
         updateBrowserSourceURL();
     });
 
     showBackgroundCheckbox.addEventListener('change', (e) => {
         config.appearance.showBackground = e.target.checked;
-        updatePreview();
         updateBrowserSourceURL();
     });
 
@@ -98,37 +93,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         updateBrowserSourceURL();
     });
-
-    // Update preview
-    function updatePreview() {
-    const previewBox = document.getElementById('preview-box');
-    const messageText = previewBox.querySelector('.message-text');
-    const platformBadge = previewBox.querySelector('.platform-badge');
-    
-    if (messageText) {
-        messageText.style.color = config.appearance.textColor;
-        messageText.style.fontSize = `${config.appearance.fontSize}px`;
-    }
-    
-    if (platformBadge) {
-        platformBadge.style.display = config.appearance.showLogo ? 'inline-flex' : 'none';
-    }
-
-    // Update all preview messages
-    const allMessages = previewBox.querySelectorAll('.preview-message');
-    allMessages.forEach(msg => {
-        const text = msg.querySelector('.message-text');
-        const badge = msg.querySelector('.platform-badge');
-        
-        if (text) {
-            text.style.color = config.appearance.textColor;
-            text.style.fontSize = `${config.appearance.fontSize}px`;
-        }
-        if (badge) {
-            badge.style.display = config.appearance.showLogo ? 'inline-flex' : 'none';
-        }
-    });
-    }
 
     // Update browser source URL
     function updateBrowserSourceURL(returnOnly = false) {
@@ -210,6 +174,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize
     updateBrowserSourceURL();
-    updatePreview();
     
 }); // End DOMContentLoaded

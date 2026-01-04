@@ -13,7 +13,7 @@ const config = {
         fontSize: parseInt(urlParams.get('fontSize')) || 18,
         showLogo: urlParams.get('showLogo') === '1',
         showTimestamp: urlParams.get('showTimestamp') === '1',
-        showBackground: urlParams.get('showBackground') !== '0',  // Default to true
+        showBackground: urlParams.get('showBackground') === null || urlParams.get('showBackground') === '1',  // Default to true
         messageTimeout: parseInt(urlParams.get('messageTimeout')) || 0
     }
 };
