@@ -45,12 +45,15 @@
             align-items: flex-start;
             gap: 8px;
             padding: 8px 12px;
-            background: rgba(0, 0, 0, 0.6);
             border-radius: 8px;
-            backdrop-filter: blur(10px);
             animation: slideIn 0.3s ease;
             max-width: 100%;
             word-wrap: break-word;
+        }
+        
+        .chat-message.with-background {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
         }
 
         @keyframes slideIn {

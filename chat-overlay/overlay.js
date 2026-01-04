@@ -12,7 +12,9 @@ const config = {
         textColor: '#' + (urlParams.get('textColor') || 'ffffff'),
         fontSize: parseInt(urlParams.get('fontSize')) || 18,
         showLogo: urlParams.get('showLogo') === '1',
-        showTimestamp: urlParams.get('showTimestamp') === '1'
+        showTimestamp: urlParams.get('showTimestamp') === '1',
+        showBackground: urlParams.get('showBackground') !== '0',  // Default to true
+        messageTimeout: parseInt(urlParams.get('messageTimeout')) || 0
     }
 };
 
@@ -43,6 +45,11 @@ const platformInfo = {
 function addChatMessage(platform, username, message, timestamp = new Date(), emotes = null) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'chat-message';
+    
+    // Add background class if enabled
+    if (config.appearance.showBackground) {
+        messageDiv.classList.add('with-background');
+    }
     
     const info = platformInfo[platform];
     
@@ -84,6 +91,21 @@ function addChatMessage(platform, username, message, timestamp = new Date(), emo
     messageDiv.innerHTML = html;
     chatContainer.appendChild(messageDiv);
     messageCount++;
+    
+    // Auto-remove message after timeout if configured
+    if (config.appearance.messageTimeout > 0) {
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.classList.add('removing');
+                setTimeout(() => {
+                    if (messageDiv.parentNode) {
+                        messageDiv.remove();
+                        messageCount--;
+                    }
+                }, 300);
+            }
+        }, config.appearance.messageTimeout * 1000);
+    }
     
     // Remove old messages if we exceed the limit
     if (messageCount > MAX_MESSAGES) {

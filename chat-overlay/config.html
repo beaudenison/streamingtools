@@ -106,6 +106,53 @@
                     </div>
                 </section>
 
+                <section class="config-section">
+                    <h2>🎨 Appearance Settings</h2>
+                    <p class="section-description">Customize the look of your chat overlay</p>
+                    
+                    <div class="appearance-controls">
+                        <div class="control-group">
+                            <label for="text-color">Text Color</label>
+                            <div class="color-picker-group">
+                                <input type="color" id="text-color" value="#ffffff">
+                                <input type="text" id="text-color-hex" value="#ffffff" readonly>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="font-size">Font Size: <span id="font-size-value">18px</span></label>
+                            <input type="range" id="font-size" min="12" max="32" value="18" step="1">
+                        </div>
+
+                        <div class="control-group">
+                            <label for="message-timeout">Message Duration: <span id="message-timeout-value">Never disappear</span></label>
+                            <input type="range" id="message-timeout" min="0" max="60" value="0" step="5">
+                            <small style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.25rem; display: block;">Set to 0 to keep messages visible (default)</small>
+                        </div>
+
+                        <div class="control-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="show-background" checked>
+                                <span>Show message background</span>
+                            </label>
+                        </div>
+
+                        <div class="control-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="show-platform-logo" checked>
+                                <span>Show platform logos</span>
+                            </label>
+                        </div>
+
+                        <div class="control-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="show-timestamp">
+                                <span>Show timestamps</span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
                 <div class="url-display-section">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Browser Source URL (select and copy)</label>
                     <textarea id="browser-source-url-display" readonly style="width: 100%; height: 80px; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: white; color: #000; font-family: monospace; font-size: 12px; resize: vertical; cursor: text;"></textarea>
