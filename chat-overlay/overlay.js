@@ -12,7 +12,6 @@ const config = {
         textColor: '#' + (urlParams.get('textColor') || 'ffffff'),
         fontSize: parseInt(urlParams.get('fontSize')) || 18,
         showLogo: urlParams.get('showLogo') === '1',
-        showTimestamp: urlParams.get('showTimestamp') === '1',
         showBackground: urlParams.get('showBackground') !== '0',  // true unless explicitly set to '0'
         messageTimeout: parseInt(urlParams.get('messageTimeout')) || 0
     }
@@ -71,20 +70,6 @@ function addChatMessage(platform, username, message, timestamp = new Date(), emo
     }
     
     html += '<div class="message-content">';
-    
-    // Timestamp
-    console.log('showTimestamp setting:', config.appearance.showTimestamp);
-    if (config.appearance.showTimestamp) {
-        const time = timestamp.toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
-        const timestampHTML = `<span class="timestamp" style="color: #ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.8) !important;">[${time}]</span>`;
-        console.log('Adding timestamp HTML:', timestampHTML);
-        html += timestampHTML;
-    } else {
-        console.log('Timestamp is disabled');
-    }
     
     // Process message with emotes
     const processedMessage = processEmotes(message, emotes, platform);

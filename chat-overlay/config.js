@@ -9,7 +9,6 @@ const config = {
         textColor: '#ffffff',
         fontSize: 18,
         showLogo: true,
-        showTimestamp: false,
         showBackground: true,
         messageTimeout: 0  // 0 means never disappear
     }
@@ -51,7 +50,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const fontSizeInput = document.getElementById('font-size');
     const fontSizeValue = document.getElementById('font-size-value');
     const showLogoCheckbox = document.getElementById('show-platform-logo');
-    const showTimestampCheckbox = document.getElementById('show-timestamp');
     const showBackgroundCheckbox = document.getElementById('show-background');
     const messageTimeoutInput = document.getElementById('message-timeout');
     const messageTimeoutValue = document.getElementById('message-timeout-value');
@@ -70,11 +68,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     showLogoCheckbox.addEventListener('change', (e) => {
         config.appearance.showLogo = e.target.checked;
-        updateBrowserSourceURL();
-    });
-
-    showTimestampCheckbox.addEventListener('change', (e) => {
-        config.appearance.showTimestamp = e.target.checked;
         updateBrowserSourceURL();
     });
 
@@ -115,7 +108,6 @@ document.addEventListener('DOMContentLoaded', function() {
     params.set('textColor', config.appearance.textColor.replace('#', ''));
     params.set('fontSize', config.appearance.fontSize);
     params.set('showLogo', config.appearance.showLogo ? '1' : '0');
-    params.set('showTimestamp', config.appearance.showTimestamp ? '1' : '0');
     params.set('showBackground', config.appearance.showBackground ? '1' : '0');
     params.set('messageTimeout', config.appearance.messageTimeout);
     
