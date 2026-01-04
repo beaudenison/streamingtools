@@ -73,12 +73,17 @@ function addChatMessage(platform, username, message, timestamp = new Date(), emo
     html += '<div class="message-content">';
     
     // Timestamp
+    console.log('showTimestamp setting:', config.appearance.showTimestamp);
     if (config.appearance.showTimestamp) {
         const time = timestamp.toLocaleTimeString('en-US', { 
             hour: '2-digit', 
             minute: '2-digit' 
         });
-        html += `<span class="timestamp" style="color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">[${time}]</span>`;
+        const timestampHTML = `<span class="timestamp" style="color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">[${time}]</span>`;
+        console.log('Adding timestamp HTML:', timestampHTML);
+        html += timestampHTML;
+    } else {
+        console.log('Timestamp is disabled');
     }
     
     // Process message with emotes
