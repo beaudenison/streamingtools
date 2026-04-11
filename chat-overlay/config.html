@@ -120,8 +120,107 @@
                         </div>
 
                         <div class="control-group">
+                            <label for="username-color-mode">Username Color Mode</label>
+                            <select id="username-color-mode">
+                                <option value="platform" selected>Match platform color</option>
+                                <option value="custom">Use custom username color</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group" id="username-color-group" style="display: none;">
+                            <label for="username-color">Username Color</label>
+                            <div class="color-picker-group">
+                                <input type="color" id="username-color" value="#ffd166">
+                                <input type="text" id="username-color-hex" value="#ffd166" readonly>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="font-family">Font Family</label>
+                            <select id="font-family">
+                                <option value="system" selected>System UI</option>
+                                <option value="inter">Inter</option>
+                                <option value="poppins">Poppins</option>
+                                <option value="jetbrainsmono">JetBrains Mono</option>
+                                <option value="montserrat">Montserrat</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
                             <label for="font-size">Font Size: <span id="font-size-value">18px</span></label>
                             <input type="range" id="font-size" min="12" max="32" value="18" step="1">
+                        </div>
+
+                        <div class="control-group">
+                            <label for="font-weight">Font Weight: <span id="font-weight-value">500</span></label>
+                            <input type="range" id="font-weight" min="300" max="800" value="500" step="100">
+                        </div>
+
+                        <div class="control-group">
+                            <label for="background-color">Background Color</label>
+                            <div class="color-picker-group">
+                                <input type="color" id="background-color" value="#000000">
+                                <input type="text" id="background-color-hex" value="#000000" readonly>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="background-opacity">Background Opacity: <span id="background-opacity-value">60%</span></label>
+                            <input type="range" id="background-opacity" min="0" max="100" value="60" step="5">
+                        </div>
+
+                        <div class="control-group">
+                            <label for="border-radius">Message Corner Roundness: <span id="border-radius-value">8px</span></label>
+                            <input type="range" id="border-radius" min="0" max="30" value="8" step="1">
+                        </div>
+
+                        <div class="control-group">
+                            <label for="message-gap">Message Spacing: <span id="message-gap-value">8px</span></label>
+                            <input type="range" id="message-gap" min="0" max="24" value="8" step="1">
+                        </div>
+
+                        <div class="control-group">
+                            <label for="message-padding">Message Padding: <span id="message-padding-value">8px vertical / 12px horizontal</span></label>
+                            <input type="range" id="message-padding" min="4" max="28" value="12" step="2">
+                        </div>
+
+                        <div class="control-group">
+                            <label for="shadow-strength">Shadow Strength: <span id="shadow-strength-value">40%</span></label>
+                            <input type="range" id="shadow-strength" min="0" max="100" value="40" step="5">
+                        </div>
+
+                        <div class="control-group">
+                            <label for="animation-style">Animation Style</label>
+                            <select id="animation-style">
+                                <option value="slide-left" selected>Slide in from left</option>
+                                <option value="slide-right">Slide in from right</option>
+                                <option value="fade">Fade in</option>
+                                <option value="pop">Pop in</option>
+                                <option value="none">No animation</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="animation-duration">Animation Speed: <span id="animation-duration-value">300ms</span></label>
+                            <input type="range" id="animation-duration" min="0" max="1200" value="300" step="50">
+                        </div>
+
+                        <div class="control-group">
+                            <label for="container-position">Overlay Position</label>
+                            <select id="container-position">
+                                <option value="bottom" selected>Bottom of source</option>
+                                <option value="top">Top of source</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="container-padding">Overlay Inner Padding: <span id="container-padding-value">20px</span></label>
+                            <input type="range" id="container-padding" min="0" max="80" value="20" step="2">
+                        </div>
+
+                        <div class="control-group">
+                            <label for="max-messages">Maximum Messages: <span id="max-messages-value">50</span></label>
+                            <input type="range" id="max-messages" min="10" max="200" value="50" step="10">
                         </div>
 
                         <div class="control-group">
@@ -141,6 +240,13 @@
                             <label class="checkbox-label">
                                 <input type="checkbox" id="show-platform-logo" checked>
                                 <span>Show platform logos</span>
+                            </label>
+                        </div>
+
+                        <div class="control-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="show-timestamp">
+                                <span>Show message timestamp</span>
                             </label>
                         </div>
                     </div>

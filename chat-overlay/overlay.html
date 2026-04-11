@@ -4,9 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Overlay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500;700&family=Montserrat:wght@400;500;700;800&family=Poppins:wght@400;500;700;800&display=swap" rel="stylesheet">
     <!-- Load Pusher for Kick integration -->
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <style>
+        :root {
+            --overlay-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            --message-text-color: #ffffff;
+            --message-font-size: 18px;
+            --message-font-weight: 500;
+            --container-padding: 20px;
+            --message-gap: 8px;
+            --message-border-radius: 8px;
+            --message-padding-y: 8px;
+            --message-padding-x: 12px;
+            --message-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+            --message-bg-rgb: 0, 0, 0;
+            --message-bg-opacity: 0.6;
+            --animation-duration: 300ms;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -15,19 +34,26 @@
 
         body {
             background: transparent;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: var(--overlay-font-family);
             overflow: hidden;
-            padding: 20px;
+            padding: var(--container-padding);
         }
 
         #chat-container {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            justify-content: flex-end;
+            gap: var(--message-gap);
             max-height: 100vh;
             overflow-y: auto;
             overflow-x: hidden;
-            padding-bottom: 20px;
+            padding-bottom: var(--container-padding);
+        }
+
+        #chat-container.position-top {
+            justify-content: flex-start;
+            padding-bottom: 0;
+            padding-top: var(--container-padding);
         }
         
         /* Hide scrollbar but keep functionality */
@@ -44,19 +70,42 @@
             display: flex;
             align-items: flex-start;
             gap: 8px;
-            padding: 8px 12px;
-            border-radius: 8px;
-            animation: slideIn 0.3s ease;
+            padding: var(--message-padding-y) var(--message-padding-x);
+            border-radius: var(--message-border-radius);
+            box-shadow: var(--message-shadow);
             max-width: 100%;
             word-wrap: break-word;
+            animation-duration: var(--animation-duration);
+            animation-fill-mode: both;
+            animation-timing-function: ease;
+        }
+
+        .chat-message.anim-slide-left {
+            animation-name: slideInLeft;
+        }
+
+        .chat-message.anim-slide-right {
+            animation-name: slideInRight;
+        }
+
+        .chat-message.anim-fade {
+            animation-name: fadeIn;
+        }
+
+        .chat-message.anim-pop {
+            animation-name: popIn;
+        }
+
+        .chat-message.anim-none {
+            animation-name: none;
         }
         
         .chat-message.with-background {
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(var(--message-bg-rgb), var(--message-bg-opacity));
             backdrop-filter: blur(10px);
         }
 
-        @keyframes slideIn {
+        @keyframes slideInLeft {
             from {
                 opacity: 0;
                 transform: translateX(-20px);
@@ -64,6 +113,37 @@
             to {
                 opacity: 1;
                 transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.92);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
             }
         }
 
@@ -107,9 +187,19 @@
             margin-right: 4px;
         }
 
+        .timestamp {
+            opacity: 0.75;
+            margin-right: 6px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
         .message-text {
             word-wrap: break-word;
             overflow-wrap: break-word;
+            color: var(--message-text-color);
+            font-size: var(--message-font-size);
+            font-weight: var(--message-font-weight);
         }
         
         /* Emote styling */

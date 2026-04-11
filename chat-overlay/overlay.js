@@ -1,31 +1,73 @@
 // Parse URL parameters
 const urlParams = new URLSearchParams(window.location.search);
 
+function getIntParam(name, fallback, min = Number.MIN_SAFE_INTEGER, max = Number.MAX_SAFE_INTEGER) {
+    const raw = parseInt(urlParams.get(name), 10);
+    if (Number.isNaN(raw)) return fallback;
+    return Math.min(max, Math.max(min, raw));
+}
+
+function getHexParam(name, fallback) {
+    const raw = (urlParams.get(name) || '').trim();
+    if (/^[0-9a-fA-F]{6}$/.test(raw)) return `#${raw.toLowerCase()}`;
+    if (/^#[0-9a-fA-F]{6}$/.test(raw)) return raw.toLowerCase();
+    return fallback;
+}
+
+function hexToRgbString(hex) {
+    const safeHex = hex.replace('#', '');
+    const r = parseInt(safeHex.slice(0, 2), 16);
+    const g = parseInt(safeHex.slice(2, 4), 16);
+    const b = parseInt(safeHex.slice(4, 6), 16);
+    return `${r}, ${g}, ${b}`;
+}
+
+function getFontFamily(value) {
+    const map = {
+        system: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif",
+        inter: "'Inter', sans-serif",
+        poppins: "'Poppins', sans-serif",
+        jetbrainsmono: "'JetBrains Mono', monospace",
+        montserrat: "'Montserrat', sans-serif"
+    };
+    return map[value] || map.system;
+}
+
 const config = {
-    platforms: urlParams.get('platforms')?.split(',') || [],
+    platforms: urlParams.get('platforms')?.split(',').filter(Boolean) || [],
     usernames: {
         twitch: urlParams.get('twitch_user') || '',
         kick: urlParams.get('kick_user') || '',
         youtube: urlParams.get('youtube_user') || ''
     },
     appearance: {
-        textColor: '#' + (urlParams.get('textColor') || 'ffffff'),
-        fontSize: parseInt(urlParams.get('fontSize')) || 18,
-        showLogo: urlParams.get('showLogo') === '1',
-        showBackground: urlParams.get('showBackground') !== '0',  // true unless explicitly set to '0'
-        messageTimeout: parseInt(urlParams.get('messageTimeout')) || 0
+        textColor: getHexParam('textColor', '#ffffff'),
+        fontSize: getIntParam('fontSize', 18, 12, 60),
+        fontWeight: getIntParam('fontWeight', 500, 300, 900),
+        fontFamily: urlParams.get('fontFamily') || 'system',
+        usernameColorMode: urlParams.get('usernameColorMode') || 'platform',
+        usernameColor: getHexParam('usernameColor', '#ffd166'),
+        showLogo: urlParams.get('showLogo') !== '0',
+        showBackground: urlParams.get('showBackground') !== '0',
+        backgroundColor: getHexParam('backgroundColor', '#000000'),
+        backgroundOpacity: getIntParam('backgroundOpacity', 60, 0, 100),
+        borderRadius: getIntParam('borderRadius', 8, 0, 40),
+        messageGap: getIntParam('messageGap', 8, 0, 40),
+        messagePadding: getIntParam('messagePadding', 12, 4, 40),
+        shadowStrength: getIntParam('shadowStrength', 40, 0, 100),
+        animationStyle: urlParams.get('animationStyle') || 'slide-left',
+        animationDuration: getIntParam('animationDuration', 300, 0, 2500),
+        containerPosition: urlParams.get('containerPosition') === 'top' ? 'top' : 'bottom',
+        containerPadding: getIntParam('containerPadding', 20, 0, 100),
+        maxMessages: getIntParam('maxMessages', 50, 10, 300),
+        showTimestamp: urlParams.get('showTimestamp') === '1',
+        messageTimeout: getIntParam('messageTimeout', 0, 0, 300)
     }
 };
 
-console.log('Overlay config loaded:', config);
-console.log('showBackground param:', urlParams.get('showBackground'));
-console.log('messageTimeout param:', urlParams.get('messageTimeout'));
-
 const chatContainer = document.getElementById('chat-container');
-const MAX_MESSAGES = 50; // Maximum messages to display
 let messageCount = 0;
 
-// Platform info
 const platformInfo = {
     twitch: {
         name: 'Twitch',
@@ -44,22 +86,67 @@ const platformInfo = {
     }
 };
 
+function applyAppearanceSettings() {
+    const root = document.documentElement;
+    const p = config.appearance;
+    const verticalPadding = Math.max(4, Math.round(p.messagePadding * 0.67));
+    const shadowAlpha = (p.shadowStrength / 100) * 0.6;
+
+    root.style.setProperty('--overlay-font-family', getFontFamily(p.fontFamily));
+    root.style.setProperty('--message-text-color', p.textColor);
+    root.style.setProperty('--message-font-size', `${p.fontSize}px`);
+    root.style.setProperty('--message-font-weight', `${p.fontWeight}`);
+    root.style.setProperty('--container-padding', `${p.containerPadding}px`);
+    root.style.setProperty('--message-gap', `${p.messageGap}px`);
+    root.style.setProperty('--message-border-radius', `${p.borderRadius}px`);
+    root.style.setProperty('--message-padding-y', `${verticalPadding}px`);
+    root.style.setProperty('--message-padding-x', `${p.messagePadding}px`);
+    root.style.setProperty('--message-shadow', `0 6px 18px rgba(0, 0, 0, ${shadowAlpha.toFixed(2)})`);
+    root.style.setProperty('--message-bg-rgb', hexToRgbString(p.backgroundColor));
+    root.style.setProperty('--message-bg-opacity', (p.backgroundOpacity / 100).toFixed(2));
+    root.style.setProperty('--animation-duration', `${p.animationDuration}ms`);
+
+    chatContainer.classList.toggle('position-top', p.containerPosition === 'top');
+}
+
+function getUsernameColor(platform) {
+    if (config.appearance.usernameColorMode === 'custom') {
+        return config.appearance.usernameColor;
+    }
+    return platformInfo[platform]?.color || '#ffffff';
+}
+
+function getAnimationClass() {
+    const style = config.appearance.animationStyle;
+    const allowed = new Set(['slide-left', 'slide-right', 'fade', 'pop', 'none']);
+    return allowed.has(style) ? `anim-${style}` : 'anim-slide-left';
+}
+
+function formatTimestamp(timestamp) {
+    return timestamp.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
 // Add a chat message to the display
 function addChatMessage(platform, username, message, timestamp = new Date(), emotes = null) {
     const messageDiv = document.createElement('div');
-    messageDiv.className = 'chat-message';
-    
-    // Add background class if enabled
+    messageDiv.className = `chat-message ${getAnimationClass()}`;
+
     if (config.appearance.showBackground) {
         messageDiv.classList.add('with-background');
     }
-    
-    const info = platformInfo[platform];
-    
+
+    const info = platformInfo[platform] || {
+        color: '#ffffff',
+        icon: '',
+        name: 'Unknown'
+    };
+
     let html = '';
-    
-    // Platform badge
-    if (config.appearance.showLogo) {
+
+    if (config.appearance.showLogo && info.icon) {
         html += `
             <div class="platform-badge" style="background: ${info.color};">
                 <svg viewBox="0 0 24 24" fill="white">
@@ -68,30 +155,30 @@ function addChatMessage(platform, username, message, timestamp = new Date(), emo
             </div>
         `;
     }
-    
+
     html += '<div class="message-content">';
-    
-    // Process message with emotes
+
     const processedMessage = processEmotes(message, emotes, platform);
-    
-    // Username and message
+    const usernameColor = getUsernameColor(platform);
+
+    if (config.appearance.showTimestamp) {
+        html += `<span class="timestamp" style="color: ${config.appearance.textColor};">[${formatTimestamp(timestamp)}]</span>`;
+    }
+
     html += `
-        <span class="username" style="color: ${info.color};">${escapeHtml(username)}:</span>
-        <span class="message-text" style="color: ${config.appearance.textColor}; font-size: ${config.appearance.fontSize}px;">${processedMessage}</span>
+        <span class="username" style="color: ${usernameColor};">${escapeHtml(username)}:</span>
+        <span class="message-text">${processedMessage}</span>
     `;
-    
+
     html += '</div>';
-    
+
     messageDiv.innerHTML = html;
     chatContainer.appendChild(messageDiv);
     messageCount++;
-    
-    // Auto-remove message after timeout if configured
+
     if (config.appearance.messageTimeout > 0) {
-        console.log(`Message will be removed in ${config.appearance.messageTimeout} seconds`);
         setTimeout(() => {
             if (messageDiv.parentNode) {
-                console.log('Removing message after timeout');
                 messageDiv.classList.add('removing');
                 setTimeout(() => {
                     if (messageDiv.parentNode) {
@@ -102,119 +189,100 @@ function addChatMessage(platform, username, message, timestamp = new Date(), emo
             }
         }, config.appearance.messageTimeout * 1000);
     }
-    
-    // Remove old messages if we exceed the limit
-    if (messageCount > MAX_MESSAGES) {
+
+    while (messageCount > config.appearance.maxMessages) {
         const oldMessage = chatContainer.firstChild;
-        if (oldMessage) {
-            oldMessage.classList.add('removing');
-            setTimeout(() => {
-                oldMessage.remove();
-                messageCount--;
-            }, 300);
-        }
+        if (!oldMessage) break;
+        oldMessage.remove();
+        messageCount--;
     }
-    
-    // Auto-scroll to bottom smoothly
-    setTimeout(() => {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-    }, 10);
+
+    if (config.appearance.containerPosition === 'bottom') {
+        setTimeout(() => {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }, 10);
+    } else {
+        chatContainer.scrollTop = 0;
+    }
 }
 
-// Process emotes in messages
 function processEmotes(message, emotes, platform) {
     if (platform === 'twitch') {
-        // Twitch emotes format: { id: [[start, end], ...] }
         if (!emotes || Object.keys(emotes).length === 0) {
             return escapeHtml(message);
         }
         return processTwitchEmotes(message, emotes);
-    } else if (platform === 'kick') {
-        // Kick emotes are embedded in the message as [emote:ID:NAME]
-        // Always process Kick messages to handle emotes
+    }
+
+    if (platform === 'kick') {
         return processKickEmotes(message, emotes);
     }
-    
+
     return escapeHtml(message);
 }
 
-// Process Twitch emotes
 function processTwitchEmotes(message, emotesData) {
     if (!emotesData || Object.keys(emotesData).length === 0) {
         return escapeHtml(message);
     }
-    
-    // Build array of replacements
+
     const replacements = [];
     for (const [emoteId, positions] of Object.entries(emotesData)) {
         positions.forEach(([start, end]) => {
             replacements.push({
-                start: parseInt(start),
-                end: parseInt(end),
+                start: parseInt(start, 10),
+                end: parseInt(end, 10),
                 img: `<img src="https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/1.0" class="emote" alt="emote">`
             });
         });
     }
-    
-    // Sort by position (reverse order to replace from end to start)
+
     replacements.sort((a, b) => b.start - a.start);
-    
-    // Replace emotes
+
     let result = message;
     replacements.forEach(({ start, end, img }) => {
         result = result.substring(0, start) + img + result.substring(end + 1);
     });
-    
+
     return escapeHtml(result).replace(/&lt;img [^&]*&gt;/g, (match) => {
         return match.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
     });
 }
 
-// Process Kick emotes
-function processKickEmotes(message, emotes) {
-    console.log('Processing Kick emotes. Message:', message, 'Emotes metadata:', emotes);
-    
-    // Kick sends emotes in the format [emote:ID:NAME] directly in the message
-    // We need to parse these and replace them with actual images
+function processKickEmotes(message) {
     const emoteRegex = /\[emote:(\d+):([^\]]+)\]/g;
-    
+
     const parts = [];
     let lastIndex = 0;
     let match;
-    
+
     while ((match = emoteRegex.exec(message)) !== null) {
         const fullMatch = match[0];
         const emoteId = match[1];
         const emoteName = match[2];
         const matchStart = match.index;
-        
-        // Add text before this emote (escaped)
+
         if (matchStart > lastIndex) {
             parts.push(escapeHtml(message.substring(lastIndex, matchStart)));
         }
-        
-        // Add the emote as an img tag (not escaped)
+
         const emoteUrl = `https://files.kick.com/emotes/${emoteId}/fullsize`;
         parts.push(`<img src="${emoteUrl}" class="emote" alt="${emoteName}" title="${emoteName}">`);
-        
-        // Update lastIndex to after this emote
+
         lastIndex = matchStart + fullMatch.length;
     }
-    
-    // Add any remaining text after the last emote
+
     if (lastIndex < message.length) {
         parts.push(escapeHtml(message.substring(lastIndex)));
     }
-    
-    // If no emotes were found, just return the escaped message
+
     if (parts.length === 0) {
         return escapeHtml(message);
     }
-    
+
     return parts.join('');
 }
 
-// Escape HTML to prevent XSS
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -226,39 +294,29 @@ let twitchSocket = null;
 
 function connectTwitch() {
     if (!config.usernames.twitch) return;
-    
-    console.log('Connecting to Twitch IRC for:', config.usernames.twitch);
-    
+
     try {
-        // Connect to Twitch IRC via WebSocket
         twitchSocket = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
-        
+
         twitchSocket.onopen = () => {
-            console.log('Twitch WebSocket opened');
-            // Send PASS and NICK (anonymous login)
             twitchSocket.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
-            twitchSocket.send('PASS SCHMOOPIIE');  // Anonymous auth
-            twitchSocket.send('NICK justinfan' + Math.floor(Math.random() * 99999));  // Anonymous user
+            twitchSocket.send('PASS SCHMOOPIIE');
+            twitchSocket.send('NICK justinfan' + Math.floor(Math.random() * 99999));
             twitchSocket.send('JOIN #' + config.usernames.twitch.toLowerCase());
         };
-        
+
         twitchSocket.onmessage = (event) => {
             const lines = event.data.split('\r\n');
-            
+
             lines.forEach(line => {
                 if (!line) return;
-                
-                console.log('Twitch IRC:', line);
-                
-                // Respond to PING
+
                 if (line.startsWith('PING')) {
                     twitchSocket.send('PONG :tmi.twitch.tv');
                     return;
                 }
-                
-                // Parse PRIVMSG (chat messages)
+
                 if (line.includes('PRIVMSG')) {
-                    // Parse IRC tags for emotes
                     let emotes = null;
                     const tagsMatch = line.match(/^@([^ ]+) /);
                     if (tagsMatch) {
@@ -267,20 +325,19 @@ function connectTwitch() {
                             const [key, value] = tag.split('=');
                             tags[key] = value;
                         });
-                        
-                        // Parse emotes tag: emote_id:start-end,start-end/emote_id:start-end
+
                         if (tags.emotes && tags.emotes !== '') {
                             emotes = {};
                             tags.emotes.split('/').forEach(emote => {
                                 const [id, positions] = emote.split(':');
                                 emotes[id] = positions.split(',').map(pos => {
                                     const [start, end] = pos.split('-');
-                                    return [parseInt(start), parseInt(end)];
+                                    return [parseInt(start, 10), parseInt(end, 10)];
                                 });
                             });
                         }
                     }
-                    
+
                     const match = line.match(/:(\w+)!.*PRIVMSG #\w+ :(.+)/);
                     if (match) {
                         const username = match[1];
@@ -288,166 +345,109 @@ function connectTwitch() {
                         addChatMessage('twitch', username, message, new Date(), emotes);
                     }
                 }
-                
-                // Check for successful join
-                if (line.includes('366')) {  // End of NAMES list
-                    console.log('Successfully joined Twitch channel');
-                    addChatMessage('twitch', 'System', '✓ Connected to Twitch chat', new Date());
+
+                if (line.includes('366')) {
+                    addChatMessage('twitch', 'System', 'Connected to Twitch chat', new Date());
                 }
             });
         };
-        
-        twitchSocket.onerror = (error) => {
-            console.error('Twitch WebSocket error:', error);
-            addChatMessage('twitch', 'System', '✗ Connection error', new Date());
+
+        twitchSocket.onerror = () => {
+            addChatMessage('twitch', 'System', 'Connection error', new Date());
         };
-        
+
         twitchSocket.onclose = () => {
-            console.log('Twitch WebSocket closed');
-            // Attempt to reconnect after 5 seconds
             setTimeout(() => {
                 if (config.usernames.twitch) {
-                    console.log('Attempting to reconnect to Twitch...');
                     connectTwitch();
                 }
             }, 5000);
         };
-        
+
     } catch (error) {
-        console.error('Error connecting to Twitch:', error);
         addChatMessage('twitch', 'System', 'Failed to connect: ' + error.message, new Date());
     }
 }
 
-function initTwitchClient() {
-    // Legacy function - no longer used, kept for compatibility
-    console.log('Using direct WebSocket connection instead');
-}
-
-// Kick Chat Integration (using direct WebSocket)
+// Kick Chat Integration
 let kickSocket = null;
 let kickChannelId = null;
 
 async function connectKick() {
     if (!config.usernames.kick) return;
-    
+
     try {
-        // First, get the channel ID from the username
-        console.log('Fetching Kick channel info for:', config.usernames.kick);
-        
-        // Try multiple methods to fetch channel data
         let channelData = null;
         let channelResponse;
-        
-        // Method 1: Try v2 API directly
+
         try {
-            console.log('Trying Kick API v2...');
             channelResponse = await fetch(`https://kick.com/api/v2/channels/${config.usernames.kick}`, {
-                headers: {
-                    'Accept': 'application/json'
-                }
+                headers: { Accept: 'application/json' }
             });
-            if (channelResponse.ok) {
-                channelData = await channelResponse.json();
-                console.log('API v2 successful:', channelData);
-            } else {
-                console.log('API v2 failed with status:', channelResponse.status);
-            }
+            if (channelResponse.ok) channelData = await channelResponse.json();
         } catch (e) {
-            console.log('API v2 fetch error:', e.message);
+            console.warn('Kick v2 failed:', e.message);
         }
-        
-        // Method 2: Try v1 API
+
         if (!channelData) {
             try {
-                console.log('Trying Kick API v1...');
                 channelResponse = await fetch(`https://kick.com/api/v1/channels/${config.usernames.kick}`, {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
+                    headers: { Accept: 'application/json' }
                 });
-                if (channelResponse.ok) {
-                    channelData = await channelResponse.json();
-                    console.log('API v1 successful:', channelData);
-                }
+                if (channelResponse.ok) channelData = await channelResponse.json();
             } catch (e) {
-                console.log('API v1 fetch error:', e.message);
+                console.warn('Kick v1 failed:', e.message);
             }
         }
-        
-        // Method 3: Try CORS proxy with v2
+
         if (!channelData) {
             try {
-                console.log('Trying CORS proxy...');
                 channelResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://kick.com/api/v2/channels/${config.usernames.kick}`)}`);
                 if (channelResponse.ok) {
                     const data = await channelResponse.json();
                     channelData = JSON.parse(data.contents);
-                    console.log('CORS proxy successful:', channelData);
                 }
             } catch (e) {
-                console.log('CORS proxy failed:', e.message);
+                console.warn('Kick proxy failed:', e.message);
             }
         }
-        
+
         if (!channelData) {
-            console.error('Failed to fetch Kick channel info from all sources');
-            addChatMessage('kick', 'System', `⚠️ Could not find channel: ${config.usernames.kick}`, new Date());
-            addChatMessage('kick', 'System', 'Please check the username is correct', new Date());
+            addChatMessage('kick', 'System', `Could not find channel: ${config.usernames.kick}`, new Date());
             return;
         }
-        
+
         kickChannelId = channelData.id;
-        
-        // Log the full response to debug
-        console.log('Full Kick channel data:', JSON.stringify(channelData, null, 2));
-        
-        // Try multiple possible chatroom ID locations
-        let chatroomId = channelData.chatroom?.id || 
-                        channelData.chatroom_id || 
-                        channelData.chatroom ||
-                        channelData.id; // Sometimes the channel ID itself is used
-        
+        const chatroomId = channelData.chatroom?.id || channelData.chatroom_id || channelData.chatroom || channelData.id;
+
         if (!chatroomId) {
-            console.error('No chatroom ID found in channel data');
-            console.log('Available keys:', Object.keys(channelData));
-            console.log('Chatroom object:', channelData.chatroom);
-            addChatMessage('kick', 'System', '⚠️ Channel found but no chatroom available', new Date());
-            addChatMessage('kick', 'System', 'Debug: Check console for channel data structure', new Date());
+            addChatMessage('kick', 'System', 'Channel found but no chatroom available', new Date());
             return;
         }
-        
-        console.log('Kick channel ID:', kickChannelId, 'Chatroom ID:', chatroomId);
-        
-        // Check if Pusher is already loaded
+
         if (typeof Pusher !== 'undefined') {
             initKickClient(chatroomId);
-        } else {
-            // Wait for Pusher to load
-            let attempts = 0;
-            const checkPusher = setInterval(() => {
-                attempts++;
-                if (typeof Pusher !== 'undefined') {
-                    clearInterval(checkPusher);
-                    initKickClient(chatroomId);
-                } else if (attempts > 50) { // 5 seconds timeout
-                    clearInterval(checkPusher);
-                    console.error('Pusher library failed to load');
-                    addChatMessage('kick', 'System', '✗ Failed to load chat library', new Date());
-                }
-            }, 100);
+            return;
         }
-        
+
+        let attempts = 0;
+        const checkPusher = setInterval(() => {
+            attempts++;
+            if (typeof Pusher !== 'undefined') {
+                clearInterval(checkPusher);
+                initKickClient(chatroomId);
+            } else if (attempts > 50) {
+                clearInterval(checkPusher);
+                addChatMessage('kick', 'System', 'Failed to load chat library', new Date());
+            }
+        }, 100);
+
     } catch (error) {
-        console.error('Error connecting to Kick:', error);
         addChatMessage('kick', 'System', 'Failed to connect to Kick chat: ' + error.message, new Date());
     }
 }
 
 function initKickClient(chatroomId) {
-    console.log('Initializing Kick client with chatroom:', chatroomId);
-    
-    // Kick's Pusher configuration
     const pusher = new Pusher('32cbd69e4b950bf97679', {
         cluster: 'us2',
         wsHost: 'ws-us2.pusher.com',
@@ -456,97 +456,56 @@ function initKickClient(chatroomId) {
         enabledTransports: ['ws', 'wss'],
         forceTLS: true
     });
-    
-    // Subscribe to the chatroom channel
-    const channelName = `chatrooms.${chatroomId}.v2`;
-    console.log('Subscribing to Kick channel:', channelName);
-    const channel = pusher.subscribe(channelName);
-    
-    // Listen for different message events
+
+    const channel = pusher.subscribe(`chatrooms.${chatroomId}.v2`);
+
     channel.bind('App\\Events\\ChatMessageEvent', function(data) {
-        console.log('Received Kick message event:', data);
-        console.log('Message content:', data.content);
-        console.log('Message metadata:', data.metadata);
         if (data.sender && data.content) {
             const username = data.sender.username || data.sender.slug;
             const emotes = data.metadata?.emotes || [];
-            console.log('Extracted emotes:', emotes);
             addChatMessage('kick', username, data.content, new Date(), emotes);
         }
     });
-    
+
     channel.bind('pusher:subscription_succeeded', function() {
-        console.log('Successfully subscribed to Kick channel');
-        addChatMessage('kick', 'System', '✓ Connected to Kick chat', new Date());
+        addChatMessage('kick', 'System', 'Connected to Kick chat', new Date());
     });
-    
-    channel.bind('pusher:subscription_error', function(status) {
-        console.error('Kick subscription error:', status);
-        addChatMessage('kick', 'System', '✗ Failed to subscribe to chat', new Date());
+
+    channel.bind('pusher:subscription_error', function() {
+        addChatMessage('kick', 'System', 'Failed to subscribe to chat', new Date());
     });
-    
-    // Connection status
-    pusher.connection.bind('connected', function() {
-        console.log('Connected to Kick WebSocket');
-    });
-    
-    pusher.connection.bind('disconnected', function() {
-        console.log('Disconnected from Kick WebSocket');
-    });
-    
-    pusher.connection.bind('error', function(err) {
-        console.error('Kick connection error:', err);
-    });
-    
-    pusher.connection.bind('state_change', function(states) {
-        console.log('Kick connection state change:', states.previous, '->', states.current);
-    });
-    
+
     kickSocket = pusher;
 }
 
-// YouTube Chat Integration (using YouTube Live Streaming API)
+// YouTube Chat placeholder
 let youtubeInterval = null;
 
 function connectYouTube() {
     if (!config.usernames.youtube) return;
-    
-    // Note: YouTube Live Chat API requires OAuth2
-    // This is a placeholder
-    console.log('YouTube integration ready for:', config.usernames.youtube);
-    
-    // Simulate a connection message
+
     setTimeout(() => {
         addChatMessage('youtube', 'System', 'YouTube chat requires live stream ID and API key', new Date());
     }, 1500);
 }
 
-// Initialize connections
 function init() {
-    console.log('Initializing chat overlay with config:', config);
-    
-    // Connect to enabled platforms
+    applyAppearanceSettings();
+
     config.platforms.forEach(platform => {
-        switch(platform) {
+        switch (platform) {
             case 'twitch':
-                if (config.usernames.twitch) {
-                    connectTwitch();
-                }
+                if (config.usernames.twitch) connectTwitch();
                 break;
             case 'kick':
-                if (config.usernames.kick) {
-                    connectKick();
-                }
+                if (config.usernames.kick) connectKick();
                 break;
             case 'youtube':
-                if (config.usernames.youtube) {
-                    connectYouTube();
-                }
+                if (config.usernames.youtube) connectYouTube();
                 break;
         }
     });
-    
-    // If no platforms configured, show a helpful message
+
     if (config.platforms.length === 0) {
         const msgDiv = document.createElement('div');
         msgDiv.style.cssText = 'color: white; padding: 20px; text-align: center; background: rgba(0,0,0,0.8); border-radius: 8px;';
@@ -558,32 +517,23 @@ function init() {
     }
 }
 
-// Start when page loads
 window.addEventListener('DOMContentLoaded', init);
 
-// Cleanup on unload
 window.addEventListener('beforeunload', () => {
-    if (twitchSocket) {
-        twitchSocket.close();
-    }
-    if (kickSocket) {
-        kickSocket.disconnect();
-    }
-    if (youtubeInterval) {
-        clearInterval(youtubeInterval);
-    }
+    if (twitchSocket) twitchSocket.close();
+    if (kickSocket) kickSocket.disconnect();
+    if (youtubeInterval) clearInterval(youtubeInterval);
 });
 
-// Demo mode for testing (generates fake messages)
 if (urlParams.get('demo') === '1') {
     const demoMessages = [
-        { platform: 'twitch', user: 'Viewer1', text: 'Hello everyone! 👋' },
+        { platform: 'twitch', user: 'Viewer1', text: 'Hello everyone!' },
         { platform: 'twitch', user: 'CoolStreamer', text: 'Thanks for watching!' },
         { platform: 'youtube', user: 'YTFan', text: 'Great stream!' },
         { platform: 'kick', user: 'KickUser', text: 'This overlay looks awesome!' },
         { platform: 'twitch', user: 'ProGamer', text: 'GG!' }
     ];
-    
+
     let demoIndex = 0;
     setInterval(() => {
         const msg = demoMessages[demoIndex % demoMessages.length];
