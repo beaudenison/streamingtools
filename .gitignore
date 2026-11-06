@@ -1,10 +1,17 @@
-node_modules
-.next
-out
+# dependencies / build output
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# local env (keep the example)
+.env*
+!.env.example
+
+# vercel
+.vercel/
+
+# misc
 .DS_Store
 *.log
 public/downloads/*.exe
-node_modules/
-.env*
-.vercel/
-.next/
