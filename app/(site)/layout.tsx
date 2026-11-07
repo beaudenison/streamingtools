@@ -1,6 +1,7 @@
 import Atmosphere from "@/components/Atmosphere";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { Analytics } from "@vercel/analytics/next";
 
 export default function SiteLayout({
   children,
@@ -15,6 +16,7 @@ export default function SiteLayout({
         {children}
         <Footer />
       </div>
+      <Analytics />
     </>
   );
 }
