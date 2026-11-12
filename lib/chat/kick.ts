@@ -62,7 +62,7 @@ async function fetchKickJson(url: string): Promise<KickApiChannel | null> {
 }
 
 export async function resolveKickChannel(slug: string): Promise<KickChannel | null> {
-  const clean = slug.trim().toLowerCase();
+  const clean = slug.trim().replace(/^@/, "").toLowerCase();
   if (!clean) return null;
 
   const direct =

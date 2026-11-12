@@ -1,3 +1,4 @@
+import { TokenError } from "@/lib/auth/token-error";
 export const kickScopes = ["user:read", "events:subscribe"];
 
 export const kickEventNames = [
@@ -40,7 +41,7 @@ export function kickAuthUrl(input: {
 }
 
 async function readToken(response: Response, fallbackRefresh: string): Promise<KickToken> {
-  if (!response.ok) throw new Error(`Kick token ${response.status}`);
+  if (!response.ok) throw new TokenError(`Kick token ${response.status}`, response.status);
   const data = (await response.json()) as {
     access_token?: string;
     refresh_token?: string;

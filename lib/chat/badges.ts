@@ -10,16 +10,14 @@ type TwitchBadgeResponse = {
 
 const FALLBACK: Record<string, string> = {
   moderator:
-    "https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d3/2",
+    "https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d0/2",
   broadcaster:
     "https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/2",
   vip: "https://static-cdn.jtvnw.net/badges/v1/b817aba4-fad8-49e2-b88a-7cc744dfa6ec/2",
   subscriber:
     "https://static-cdn.jtvnw.net/badges/v1/5d9f2208-5dd8-11e7-8513-2ff4adfae661/2",
   premium:
-    "https://static-cdn.jtvnw.net/badges/v1/bbbe0db0-a598-423e-86d0-beed257db770/2",
-  turbo:
-    "https://static-cdn.jtvnw.net/badges/v1/bd444ec6-8f34-4bf9-91f4-af1e75529e3b/2",
+    "https://static-cdn.jtvnw.net/badges/v1/bbbe0db0-a598-423e-86d0-f9fb98ca1933/2",
   partner:
     "https://static-cdn.jtvnw.net/badges/v1/d12a2e27-16f6-41d0-ab77-b780518f00a3/2",
 };
@@ -40,38 +38,29 @@ const KICK_BADGES: Record<string, { title: string; url: string }> = {
   staff: { title: "Staff", url: kickSvg("K", "#f8f8f8") },
 };
 
-let globalTwitch: TwitchBadgeResponse | null = null;
+type TwitchBadgeMaps = {
+  global: TwitchBadgeResponse | null;
+  channel: TwitchBadgeResponse | null;
+};
 
-async function twitchBadgeSets(url: string) {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    return (await res.json()) as TwitchBadgeResponse;
-  } catch {
-    return null;
-  }
-}
+const twitchBadgeCache = new Map<string, Promise<TwitchBadgeMaps>>();
 
-export async function loadTwitchBadges(channelId?: string | null) {
-  if (!globalTwitch) {
-    globalTwitch = await twitchBadgeSets(
-      "https://badges.twitch.tv/v1/badges/global/display",
-    );
-  }
-  const channel = channelId
-    ? await twitchBadgeSets(
-        `https://badges.twitch.tv/v1/badges/channels/${channelId}/display`,
-      )
-    : null;
-  return { global: globalTwitch, channel };
+// badges.twitch.tv was shut down; this site proxies Twitch's Helix badge API.
+export function loadTwitchBadges(channelId?: string | null): Promise<TwitchBadgeMaps> {
+  const id = channelId && /^\d+$/.test(channelId) ? channelId : "";
+  const cached = twitchBadgeCache.get(id);
+  if (cached) return cached;
+  const request = fetch(`/api/twitch/badges${id ? `?id=${id}` : ""}`)
+    .then((res) => (res.ok ? (res.json() as Promise<Partial<TwitchBadgeMaps>>) : null))
+    .then((data) => ({ global: data?.global ?? null, channel: data?.channel ?? null }))
+    .catch(() => ({ global: null, channel: null }));
+  twitchBadgeCache.set(id, request);
+  return request;
 }
 
 export function twitchBadgesFromTag(
   tag: string | undefined,
-  maps: {
-    global: TwitchBadgeResponse | null;
-    channel: TwitchBadgeResponse | null;
-  },
+  maps: TwitchBadgeMaps,
 ): Badge[] {
   if (!tag) return [];
   return tag

@@ -122,20 +122,25 @@ export default function ChatCustomizer() {
       setLiveMessages((current) => [...current.slice(-80), message]);
     };
     const get = () => settingsRef.current;
-    if (settings.twitch) stops.push(connectTwitch(settings.twitch, get, push));
-    if (settings.kick) {
-      resolveKickChannel(settings.kick).then((channel) => {
-        if (!active) return;
-        if (!channel) {
-          setKickStatus("err");
-          return;
-        }
-        setKickStatus("ok");
-        stops.push(connectKick(channel, get, push));
-      });
-    }
+    // Wait for typing to settle so each keystroke doesn't open a connection.
+    const timer = window.setTimeout(() => {
+      setKickStatus("idle");
+      if (settings.twitch) stops.push(connectTwitch(settings.twitch, get, push));
+      if (settings.kick) {
+        resolveKickChannel(settings.kick).then((channel) => {
+          if (!active) return;
+          if (!channel) {
+            setKickStatus("err");
+            return;
+          }
+          setKickStatus("ok");
+          stops.push(connectKick(channel, get, push));
+        });
+      }
+    }, 500);
     return () => {
       active = false;
+      window.clearTimeout(timer);
       stops.forEach((stop) => stop());
     };
   }, [live, settings.twitch, settings.kick]);
@@ -532,9 +537,15 @@ export default function ChatCustomizer() {
           <button
             className="btn btn-ghost"
             type="button"
-            onClick={() => setSettings(defaultSettings)}
+            onClick={() =>
+              setSettings((current) => ({
+                ...defaultSettings,
+                twitch: current.twitch,
+                kick: current.kick,
+              }))
+            }
           >
-            Reset
+            Reset look
           </button>
         </div>
         <p className="hint">

@@ -1,3 +1,4 @@
+import { TokenError } from "@/lib/auth/token-error";
 import { webhookUrl } from "@/lib/auth/http";
 
 export const twitchScopes = [
@@ -45,7 +46,7 @@ export function twitchAuthUrl(input: { redirectUri: string; state: string }) {
 }
 
 async function readToken(response: Response): Promise<TokenBundle> {
-  if (!response.ok) throw new Error(`Twitch token ${response.status}`);
+  if (!response.ok) throw new TokenError(`Twitch token ${response.status}`, response.status);
   const data = (await response.json()) as {
     access_token?: string;
     refresh_token?: string;

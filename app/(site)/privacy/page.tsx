@@ -20,8 +20,8 @@ export default function PrivacyPage() {
       <div className="tool-hero">
         <h1>Privacy</h1>
         <p className="lede">
-          How Portrait Clip and this website handle information. Updated October
-          8, 2026.
+          How Portrait Clip and this website handle information. Updated November
+          11, 2026.
         </p>
       </div>
 
@@ -51,6 +51,15 @@ export default function PrivacyPage() {
             password.
           </li>
           <li>The site does not use advertising or analytics cookies.</li>
+          <li>
+            The site counts page views with Vercel Web Analytics. It sets no
+            cookies and does not follow you to other sites. Vercel describes it
+            in its{" "}
+            <a href="https://vercel.com/docs/analytics/privacy-policy">
+              analytics privacy notes
+            </a>
+            . The chat and alert overlays are not counted.
+          </li>
           <li>
             The site is hosted by Vercel. Serving a page includes ordinary
             connection data, such as an IP address. Vercel describes that in

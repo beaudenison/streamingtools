@@ -41,15 +41,19 @@ export function fragmentsFromTwitch(
   const twitch = parseTwitchEmotes(emoteTag);
   if (!twitch.length) return fragmentsFromWords(text, thirdParty);
 
+  // Twitch emote positions count Unicode code points, not UTF-16 units,
+  // so slice by code point or any emoji earlier in the message shifts them.
+  const chars = Array.from(text);
   const out: Fragment[] = [];
   let cursor = 0;
   for (const emote of twitch) {
+    if (emote.start < cursor || emote.end >= chars.length) continue;
     if (emote.start > cursor) {
       out.push(
-        ...fragmentsFromWords(text.slice(cursor, emote.start), thirdParty),
+        ...fragmentsFromWords(chars.slice(cursor, emote.start).join(""), thirdParty),
       );
     }
-    const name = text.slice(emote.start, emote.end + 1);
+    const name = chars.slice(emote.start, emote.end + 1).join("");
     out.push({
       type: "emote",
       name,
@@ -58,7 +62,9 @@ export function fragmentsFromTwitch(
     });
     cursor = emote.end + 1;
   }
-  if (cursor < text.length) out.push(...fragmentsFromWords(text.slice(cursor), thirdParty));
+  if (cursor < chars.length) {
+    out.push(...fragmentsFromWords(chars.slice(cursor).join(""), thirdParty));
+  }
   return mergeText(out);
 }
 

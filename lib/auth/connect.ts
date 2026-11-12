@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { decrypt, encrypt, randomToken } from "@/lib/secret";
+import { needsSignIn } from "@/lib/auth/token-error";
 import {
   createKickSubscriptions,
   deleteKickSubscriptions,
@@ -129,7 +130,10 @@ export async function accessToken(id: string, withinMs = 5 * 60 * 1000) {
       row.platform === "twitch" ? await refreshTwitch(refreshToken) : await refreshKick(refreshToken);
     await storeTokens(id, tokens);
     return tokens.accessToken;
-  } catch {
+  } catch (error) {
+    // A network blip or platform outage should not force a new sign-in;
+    // the next cron run retries. Only a rejected refresh token does.
+    if (!needsSignIn(error)) return null;
     const database = await db();
     if (database) {
       await database`
@@ -242,4 +246,11 @@ export async function refreshDue(withinMs: number) {
       and (expires_at is null or expires_at < ${soon})
   `;
   for (const row of rows) await accessToken(row.id, withinMs);
+}
+
+export async function pruneExpired() {
+  const database = await db();
+  if (!database) return;
+  await database`delete from sessions where expires_at < now()`;
+  await database`delete from oauth_states where expires_at < now()`;
 }

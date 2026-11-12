@@ -124,6 +124,7 @@ export default function ChatFeed({
                 {settings.nameLine === "inline" ? ":" : ""}
               </span>
             )}
+            {!settings.hideNames && settings.nameLine === "stack" ? <br /> : null}
             <span className="chat-text">
               {message.fragments.map((fragment, i) => {
                 if (fragment.type === "text" || !settings.showEmotes) {

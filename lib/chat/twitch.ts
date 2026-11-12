@@ -25,7 +25,7 @@ export function connectTwitch(
   settings: () => ChatSettings,
   onMessage: (message: ChatMessage) => void,
 ): () => void {
-  const login = channel.trim().toLowerCase();
+  const login = channel.trim().replace(/^[#@]/, "").toLowerCase();
   if (!login) return () => {};
 
   let closed = false;
@@ -38,10 +38,13 @@ export function connectTwitch(
 
   const nick = `justinfan${Math.floor(1000 + Math.random() * 80000)}`;
 
-  Promise.all([loadTwitchEmotes(login), loadTwitchBadges()]).then(([e, b]) => {
-    if (closed) return;
-    emotes = e;
-    badges = b;
+  let badgeRoom = "";
+
+  loadTwitchEmotes(login).then((map) => {
+    if (!closed) emotes = map;
+  });
+  loadTwitchBadges().then((maps) => {
+    if (!closed && !badgeRoom) badges = maps;
   });
 
   const open = () => {
@@ -61,10 +64,18 @@ export function connectTwitch(
           ws?.send("PONG :tmi.twitch.tv");
           continue;
         }
-        const priv = line.indexOf(" PRIVMSG ");
-        if (priv === -1) continue;
         const tagEnd = line.startsWith("@") ? line.indexOf(" ") : -1;
         const tags = tagEnd > 0 ? parseTags(line.slice(0, tagEnd)) : {};
+        const command = (tagEnd > 0 ? line.slice(tagEnd + 1) : line).split(" ")[1];
+        if (command === "ROOMSTATE" && tags["room-id"] && !badgeRoom) {
+          badgeRoom = tags["room-id"];
+          loadTwitchBadges(badgeRoom).then((maps) => {
+            if (!closed) badges = maps;
+          });
+          continue;
+        }
+        if (command !== "PRIVMSG") continue;
+        const priv = line.indexOf(" PRIVMSG ");
         const bodyIndex = line.indexOf(" :", priv);
         const text = bodyIndex === -1 ? "" : line.slice(bodyIndex + 2);
         const current = settings();

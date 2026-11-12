@@ -5,7 +5,7 @@ const POG =
   "https://cdn.7tv.app/emote/60ae4eee5d3fdae58314148d/2x.webp";
 const CATJAM = "https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/2x";
 const MOD =
-  "https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d3/2";
+  "https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d0/2";
 const SUB =
   "https://static-cdn.jtvnw.net/badges/v1/5d9f2208-5dd8-11e7-8513-2ff4adfae661/2";
 const VIP =

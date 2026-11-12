@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import AlertCard from "@/components/alerts/AlertCard";
+import { tone } from "@/lib/alerts/tone";
 import {
   defaultAlertSettings,
   sanitizeAlertSettings,
@@ -286,19 +287,4 @@ export default function AlertsCustomizer() {
       </form>
     </div>
   );
-}
-
-function tone() {
-  const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!Ctx) return;
-  const ctx = new Ctx();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.frequency.value = 880;
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  gain.gain.setValueAtTime(0.05, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
-  osc.start();
-  osc.stop(ctx.currentTime + 0.24);
 }

@@ -12,6 +12,7 @@ type AlertRow = {
   amount: number | null;
   message: string | null;
   is_test: boolean;
+  created_at: Date;
 };
 
 export async function readChatConfig(userId: string) {
@@ -143,7 +144,7 @@ export async function pullAlerts(key: string) {
             and created_at > now() - interval '2 minutes'
             and (is_test or type = any(${enabled}))
         )
-        returning id, platform, type, name, amount, message, is_test
+        returning id, platform, type, name, amount, message, is_test, created_at
       `
     : await database<AlertRow[]>`
         update alert_events
@@ -155,19 +156,21 @@ export async function pullAlerts(key: string) {
             and created_at > now() - interval '2 minutes'
             and is_test
         )
-        returning id, platform, type, name, amount, message, is_test
+        returning id, platform, type, name, amount, message, is_test, created_at
       `;
   await database`delete from alert_events where created_at < now() - interval '15 minutes'`;
   return {
     settings,
-    events: events.map((event) => ({
-      id: event.id,
-      platform: event.platform,
-      type: event.type,
-      name: event.name,
-      amount: event.amount,
-      message: event.message,
-    })),
+    events: [...events]
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+      .map((event) => ({
+        id: event.id,
+        platform: event.platform,
+        type: event.type,
+        name: event.name,
+        amount: event.amount,
+        message: event.message,
+      })),
   };
 }
 
